@@ -1,12 +1,13 @@
 from django.http import HttpResponse, Http404
-from django.shortcuts import render_to_response
 from django.contrib.sites.models import Site
 from django.core import urlresolvers
 from django.template import loader
 from django.utils.encoding import smart_str
+from django.shortcuts import render_to_response
 from django.core.paginator import EmptyPage, PageNotAnInteger
 
 from settings import LANG, NAME, TZ
+
 
 def index(request, sitemaps):
     """
@@ -28,12 +29,13 @@ def index(request, sitemaps):
     xml = loader.render_to_string('sitemaps/index.xml', {'sitemaps': sites})
     return HttpResponse(xml, mimetype='application/xml')
 
-def news_sitemap(request, sitemaps, section=None):
+
+def render_sitemap(request, sitemaps, section=None):
     """
-    A view for creating Google News Sitemaps
+    A view for creating Google News or Video Sitemaps
     Optional section will filter down to just the passed section name
     """
-    maps, urls = [], []
+    maps, urls, output = [], [], []
     if section is not None:
         if section not in sitemaps:
             raise Http404('No sitemap available for section: %r' % section)
@@ -52,9 +54,19 @@ def news_sitemap(request, sitemaps, section=None):
         except PageNotAnInteger:
             raise Http404('No page "%s"' % page)
 
-    return render_to_response('sitemaps/news_sitemap.xml', {
-        'urlset': urls,
-        'publication_name': NAME,
-        'publication_lang': LANG,
-        'publication_tz': TZ
-    }, mimetype='application/xml')
+        output.append(site.render(
+            **{
+                'urlset': urls,
+                'publication_name': NAME,
+                'publication_lang': LANG,
+                'publication_tz': TZ
+            }
+        ))
+
+    return render_to_response(
+        'sitemaps/header.xml',
+        {
+            'output': output
+        },
+        mimetype='application/xml'
+    )

@@ -10,7 +10,7 @@ urlpatterns = patterns('news_sitemaps.views',
         name='news_sitemaps_index'),
 
     url(r'^(?P<section>.+)\.xml',
-        'news_sitemap',
+        'render_sitemap',
         {'sitemaps': registry},
         name='news_sitemaps_sitemap'),
 )
