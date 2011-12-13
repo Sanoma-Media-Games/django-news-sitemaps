@@ -6,6 +6,8 @@ from django.template import loader, Context
 
 
 class Sitemap(DjangoSitemap):
+    template = 'sitemaps/sitemap.xml'
+
     @classmethod
     def render(cls, urlset, *args, **kwargs):
         """Render sitemap, excluding the header.
@@ -32,13 +34,15 @@ class Sitemap(DjangoSitemap):
             if isinstance(lastmod, datetime.time) or isinstance(lastmod, datetime.datetime):
                 lastmod = lastmod.replace(microsecond=0)
 
-            yield item, {
+            yield {
+                'item':         item,
                 'location':     "http://%s%s" % (domain, get('location', item)),
                 'lastmod':      lastmod,
                 'changefreq':   get('changefreq', item, None),
                 'priority':     get('priority', item, None),
             }
 
+class ExtendedSitemap(Sitemap):
     def title(self, obj):
         """
         Returns the title of the news article.
@@ -66,7 +70,7 @@ class Sitemap(DjangoSitemap):
             return obj.tags
 
 
-class NewsSitemap(Sitemap):
+class NewsSitemap(ExtendedSitemap):
     template =  'sitemaps/news_sitemap.xml'
 
     def genres(self, obj):
@@ -113,7 +117,8 @@ class NewsSitemap(Sitemap):
     def get_urls(self, page=1):
         get = self._Sitemap__get
 
-        for item, attrs in super(NewsSitemap, self).get_urls(page):
+        for attrs in super(NewsSitemap, self).get_urls(page):
+            item = attrs.pop('item')
             attrs.update({
                 # News attrs
                 'title':        get('title', item, None),
@@ -125,13 +130,14 @@ class NewsSitemap(Sitemap):
             yield attrs
 
 
-class VideoSitemap(Sitemap):
+class VideoSitemap(ExtendedSitemap):
     template =  'sitemaps/video_sitemap.xml'
 
     def get_urls(self, page=1):
         get = self._Sitemap__get
 
-        for item, attrs in super(VideoSitemap, self).get_urls(page):
+        for attrs in super(VideoSitemap, self).get_urls(page):
+            item = attrs.pop('item')
             attrs.update({
                 # Video attrs
                 'title':        get('title', item, None),

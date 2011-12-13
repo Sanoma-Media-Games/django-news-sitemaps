@@ -1,5 +1,5 @@
 from django.conf import settings
-from sitemaps import NewsSitemap, VideoSitemap
+from sitemaps import NewsSitemap, VideoSitemap, Sitemap
 
 registry = {}
 
